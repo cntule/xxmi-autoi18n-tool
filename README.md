@@ -1,5 +1,84 @@
 # autoi18n
 
+- 本项目Fork自 https://github.com/Sinsonyxs/autoi18n/tree/main
+- 感谢 Gertyxs <gertyxs@outlook.com>的开源贡献
+- 本项目只是添加了一些符合特定项目的自定义处理逻辑
+
+1. 在template中，跳过<!--skip-i18n-start-->  <!--skip-i18n-end-->之间的内容
+2. 跳过 @Component({i18n}) 中的内容 
+3. // skip-i18n-next-line 跳过下一行的内容
+4. /*skip-i18n-start*/ /*skip-i18n-end*/ 跳过中间的内容
+5. 自定义处理astEnter的处理逻辑
+6. 自定义处理astObjectProperty的处理逻辑
+7. 不出处理Object key 的i18n转换
+8. 中文翻译成英文
+```html
+
+<template>
+    <div class="hello">
+        {{ bottomTable.colConfigs }}
+        <hr/>
+        <!-- 这里面的内容要原样输出，不会被i18n转换 -->
+        <!--skip-i18n-start-->
+        <div>
+            <p>中国</p>
+            <p>重庆</p>
+        </div>
+        <!--skip-i18n-end-->
+    </div>
+</template>
+<script lang="ts">
+    import {Component, Vue} from 'vue-property-decorator';
+
+    @Component({
+        // 不会处理i18n的内容
+        i18n: {
+            messages: {
+                zh: {
+                    poeticRomance: '山城夜色，与君共赏；烟火人间，情暖山城',
+                },
+                en: {
+                    poeticRomance:
+                            'Mountain city night, and you enjoy; Fireworks in the world, love warm mountain city',
+                },
+            },
+        },
+    })
+    export default class HelloWorld extends Vue {
+        public table = {
+            colConfigs: [
+                {
+                    label: '魔幻都市风',
+                    // skip-i18n-next-line
+                    prop: '城市名称',
+                    '国家': '中国',
+                },
+            ],
+            data: [
+                {'景区': '洪崖洞',},
+                /*skip-i18n-start*/
+                {'地理位置与交通': '洪崖洞位于重庆市渝中区解放碑沧白路，地处长江、嘉陵江两江交汇的滨江地带。游客可以乘坐地铁1号线或6号线，在小什字站下车后步行前往'},
+                {'建筑特色': '洪崖洞以巴渝传统建筑特色的“吊脚楼”为主体，依山就势，沿江而建。通过分层筑台、吊脚、错叠、临崖等山地建筑手法，形成了独特的“立体式空中步行街”。这种建筑风格不仅展现了重庆的山城特色，还融合了现代与古朴的元素'},
+                /*skip-i18n-end*/
+                {'最佳游览时间': '洪崖洞的最佳游览时间是傍晚到夜间。当夜幕降临，华灯初上，整个景区被灯光装点得如梦似幻，非常适合拍照留念。夏季推荐在20:00 - 23:00游览，冬季则建议在19:00 - 23:00'},
+            ],
+            array: [
+                '山城过雨百花尽，榕叶满庭莺乱啼。',
+                // skip-i18n-next-line
+                '日日春光斗日光，山城斜路杏花香。',
+                '山城寒陟夜飞霜，枫叶青红带夕阳。',
+                /*skip-i18n-start*/
+                '山城寒食已冷落，更值暴雨过园林。',
+                "山城夜半催金柝，酒醒孤馆灯花落。",
+                /*skip-i18n-end*/
+                '山城苍苍夜寂寂，水月逶迤绕城白。'
+            ]
+        };
+    }
+</script>
+
+```
+
 [![](https://img.shields.io/badge/npm-v1.0.8-blue)](https://www.npmjs.com/package/autoi18n-tool)
 
 ## 介绍
@@ -123,7 +202,8 @@ Hello, world
 npx autoi18n init # 初始化自动国际化配置，这个命令会生成国际化配置文件和生成国际化资源文件
 npx autoi18n sync # 同步国际化资源文件
 npx autoi18n sync -r # 同步国际化资源文件并且会写入源文件 注意：这个命令会修改源码 -r 其实就是 replace 是否替换国际化字段
-npx autoi18n restore -f ./src/locales/zh-cn.ts # 根据指定的配置文件恢复代码中的国际化文案 如果存在多余的国际化文案数据，可以先恢复，重新执行 npx autoi18n sync -r 自动国际化操作，就不用手动去除多余的字段了
+npx autoi18n restore -f ./src/locales/zh.json # 根据指定的配置文件恢复代码中的国际化文案 如果存在多余的国际化文案数据，可以先恢复，重新执行 npx autoi18n sync -r 自动国际化操作，就不用手动去除多余的字段了
+npx autoi18n translate -f ./src/locales/zh.json # 中文翻译成英文；-as 另存为（如果文件已存在，会覆盖）
 npx autoi18n -h # 查看使用帮助
 npx autoi18n -V # 查看版本
 ```
@@ -132,72 +212,107 @@ npx autoi18n -V # 查看版本
 
 ```js
 module.exports = {
-  /**
-   * 需要国际化的语言种类
-   */
-  language: ['zh-cn', 'en-us'],
-  /**
-   * 国际化资源文件应用的 模块模式 根据这个模式 使用 module.exports 或者 export default
-   * 如果localeFileExt 配置为json时 此配置不起效
-   */
-  modules: 'es6',
-  /**
-   * 需要国际化的目录
-   */
-  entry: ['./src'],
-  /**
-   * 国际化资源文件输出目录
-   */
-  localePath: './src/locales',
-  /**
-   * 国际化文件类型 默认 为 .json文件 支持.js和.json
-   */
-  localeFileExt: '.json',
-  /**
-   * 需要处理国际化的文件后缀
-   */
-  extensions: [],
-  /**
-   * 需要排除国际化的文件 glob模式数组
-   */
-  exclude: [],
-  /**
-   * 要忽略做国际化的方法
-   */
-  ignoreMethods: ['i18n.t', '$t'],
-  /**
-   * 要忽略做标签属性
-   */
-  ignoreTagAttr: ['class', 'style', 'src', 'href', 'width', 'height'],
-  /**
-   * 国际化对象方法，可以自定义使用方法返回 注意：如果改变国际化方法记得把该方法加到ignoreMethods忽略列表里面
-   */
-  i18nObjectMethod: 'i18n.t',
-  /**
-   * 国际化方法简写模式，可以自定使用方法返回 注意：如果改变国际化方法记得把该方法加到ignoreMethods忽略列表里面
-   */
-  i18nMethod: '$t',
-  /**
-   * 如果不喜欢又臭又长的key 可以自定义国际化配置文件的key 
-   * 默认为 false 不自定义 
-   */
-  setMessageKey: false,
-  /**
-   * 生成md5的key长度 true: 32位字符 false: 16位字符
-   */
-  maxLenKey: false,
-  /**
-   * 国际化要注入到js里面的实例 会在js文件第一行注入
-   */
-  i18nInstance: "import i18n from '~/i18n'",
-  /**
-   * 格式化文件配置
-   */
-  prettier: {
+    /**
+    * 需要国际化的语言种类
+    */
+    language: ['zh-cn', 'en-us'],
+    /**
+    * 国际化资源文件应用的 模块模式 根据这个模式 使用 module.exports 或者 export default
+    * 如果localeFileExt 配置为json时 此配置不起效
+    */
+    modules: 'es6',
+    /**
+    * 需要国际化的目录
+    */
+    entry: ['./src'],
+    /**
+    * 国际化资源文件输出目录
+    */
+    localePath: './src/locales',
+    /**
+    * 国际化文件类型 默认 为 .json文件 支持.js和.json
+    */
+    localeFileExt: '.json',
+    /**
+    * 需要处理国际化的文件后缀
+    */
+    extensions: [],
+    /**
+    * 需要排除国际化的文件 glob模式数组
+    */
+    exclude: [],
+    /**
+    * 要忽略做国际化的方法
+    */
+    ignoreMethods: ['i18n.t', '$t'],
+    /**
+    * 要忽略做标签属性
+    */
+    ignoreTagAttr: ['class', 'style', 'src', 'href', 'width', 'height'],
+    /**
+    * 国际化对象方法，可以自定义使用方法返回 注意：如果改变国际化方法记得把该方法加到ignoreMethods忽略列表里面
+    */
+    i18nObjectMethod: 'i18n.t',
+    /**
+    * 国际化方法简写模式，可以自定使用方法返回 注意：如果改变国际化方法记得把该方法加到ignoreMethods忽略列表里面
+    */
+    i18nMethod: '$t',
+    /**
+    * 如果不喜欢又臭又长的key 可以自定义国际化配置文件的key 
+    * 默认为 false 不自定义 
+    */
+    setMessageKey: false,
+    /**
+    * 生成md5的key长度 true: 32位字符 false: 16位字符
+    */
+    maxLenKey: false,
+    /**
+    * 国际化要注入到js里面的实例 会在js文件第一行注入
+    */
+    i18nInstance: "import i18n from '~/i18n'",
+    /**
+    * 格式化文件配置
+    */
+    prettier: {
     singleQuote: true,
     trailingComma: 'es5',
     endOfLine: 'lf',
-  }
+    },
+    /**
+     * 自定义astEnter节点处理函数
+     * @param path ast 处理节点路径
+     * @param node 当前节点
+     * @param file 文件对象
+     * @param filePath 文件路径
+     * @return {boolean} true 跳过该节点及子节点的处理
+     */
+    astEnter({path, node, file, filePath}) {
+        // if (filePath.includes('src/components/HelloWorld.vue')) {
+        //     if (node.type === 'ClassProperty' && node.key.name === 'ignoreConfigList') {
+        //         return true;
+        //     }
+        // }
+    },
+    /**
+     * 自定义astObject属性节点处理函数
+     * @param path ast 处理节点路径
+     * @param node 当前节点
+     * @param key 属性key
+     * @param value 属性值
+     * @param keyName 属性key值
+     * @param valueValue 属性值值
+     * @param file 文件对象
+     * @param filePath 文件路径
+     * @return {boolean} true 跳过该节点及子节点的处理
+     */
+    astObjectProperty: ({path, node, key, value, keyName, valueValue, file, filePath}) => {
+        // if (filePath.includes('src/components/HelloWorld.vue')) {
+        //     if (keyName === 'prop' && valueValue === '菜单编码') {
+        //         return true;
+        //     }
+        // }
+    },
+    translateLanguage: 'en', // 翻译文件的名称
 }
 ```
 

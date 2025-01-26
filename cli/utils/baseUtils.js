@@ -12,7 +12,8 @@ module.exports = {
    */
   getPrettierOptions(ext, options) {
     const filePath = path.join(cwdPath, '.prettierrc.js')
-    let prettier = {}
+    let prettier = {
+    }
     if (fs.existsSync(filePath)) {
       try {
         prettier = require(filePath)

@@ -4,6 +4,7 @@ const initFileConf = require('./command/initFileConf')
 const collect = require('./command/collect')
 const package = require('../package')
 const restore = require('./command/restore')
+const translate = require('./command/translate')
 
 // 用法 版本说明
 program
@@ -52,5 +53,20 @@ program
     console.log('  Examples:')
     console.log('    $ autoi18n restore -f ./src/locales/zh-cn.ts')
   })
+
+// 翻译
+program
+    .command('translate') // 定义命令
+    .alias('s') // 命令别名
+    .description('把中文翻译成英文') // 对命令参数的描述信息
+    .option('-f, --file <path>', '读取文件')
+    .option('-as, --as <name>', '另存文件')
+    .action(function (options) {
+        translate(options)
+    })
+    .on('--help', function () {
+        console.log('  Examples:');
+        console.log('    $ autoi18n translate -f ./src/locales/zh.json -as en')
+    })
 
 program.parse(process.argv)

@@ -5,12 +5,15 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "r": "autoi18n sync -r",
+    "f": "autoi18n restore -f ./src/locales/zh-cn.json"
   },
   "dependencies": {
     "core-js": "^3.6.5",
     "vue": "^2.6.11",
-    "vue-i18n": "^8.25.0"
+    "vue-i18n": "^8.25.0",
+    "vue-property-decorator": "^9.1.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

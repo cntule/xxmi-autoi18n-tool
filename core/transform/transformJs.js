@@ -28,9 +28,10 @@ module.exports = function ({ code, file, options, messages, lang, codeType = 'js
   // 恢复已经设置的国际化字段
   code = cacheI18nField.restore(code, options)
   // 国际化数据发生变化才注入 证明该js有国际化字段
-  if (oldMessages !== JSON.stringify(messages)) {
-    // 注入实例
-    code = baseUtils.injectInstance({ code, ext, options })
-  }
+  // if (oldMessages !== JSON.stringify(messages)) {
+  //   // 注入实例
+  //   code = baseUtils.injectInstance({ code, ext, options })
+  // }
+  code = baseUtils.injectInstance({ code, ext, options })
   return code
 }

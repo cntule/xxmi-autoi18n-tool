@@ -61,10 +61,32 @@ const matchStringTpl = ({ code, options, messages, codeType, ext }) => {
  * @param {*} code
  */
 const matchString = ({ code, options, messages, ext, codeType }) => {
+
+  // 缓存不需要处理的表达式
+  let expressionIndex = 0;
+  const cacheExpression = {
+    // '%%expression_0%%':"error == '错误1'"
+  }
+  const regex = /([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(==|===)\s*(['"])(((?!\3).)*[\u4e00-\u9fa5]+((?!\3).)*)\3/gm;
+  code = code.replace(regex,(match,sign,quote)=>{
+    const key = `%%expression_${expressionIndex}%%`;
+    cacheExpression[key] = match;
+    expressionIndex++;
+    return key ;
+  });
+
+
+
   // 替换所有包含中文的普通字符串
   code = code.replace(/(['"])(((?!\1).)*[\u4e00-\u9fa5]+((?!\1).)*)\1/gm, (match, sign, value) => {
     return replaceStatement({ value, options, messages, ext, codeType, sign })
   })
+
+  // 恢复表达式
+  code = code.replace(/%%expression_\d+%%/gim, (match) => {
+    return cacheExpression[match]
+  });
+
   return code
 }
 

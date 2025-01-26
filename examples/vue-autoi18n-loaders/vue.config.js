@@ -19,11 +19,11 @@ module.exports = {
   chainWebpack: (config) => {
     // 配置自动国际化loader 无侵入式
     config.module
-      .rule('autoi18n')
+      .rule('autoi18n-tool')
       .test(/\.(vue|(j|t)sx?)$/)
       .pre() // 这个必须加上 优先执行的loader 顺序一定要在use方法前面 否则会报找不到pre方法
-      .use('autoi18n')
-      .loader('autoi18n')
+      .use('autoi18n-tool')
+      .loader('autoi18n-tool')
       .end()
   },
   devServer: {

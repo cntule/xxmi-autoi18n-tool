@@ -1,5 +1,5 @@
 {
-  "name": "autoi18n-tool",
+  "name": "xxmi-autoi18n-tool",
   "version": "1.0.8",
   "main": "./loaders/index.js",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "autoi18n-tool"
   ],
   "repository": {
-    "url": "https://github.com/Gertyxs/autoi18n/tree/main"
+    "url": "https://github.com/cntule/xxmi-autoi18n-tool/tree/main"
   },
   "files": [
     "cli",
@@ -38,11 +38,15 @@
     "@babel/preset-typescript": "^7.14.5",
     "@babel/traverse": "^7.14.8",
     "@babel/types": "^7.14.8",
+    "@vue/cli-service": "~4.5.0",
+    "axios": "^1.7.9",
     "chalk": "^4.1.1",
     "commander": "^8.0.0",
     "crypto-js": "^4.1.1",
+    "form-data": "^4.0.1",
     "glob": "^7.1.7",
     "inquirer": "^8.1.1",
+    "loadsh": "^0.0.4",
     "prettier": "^2.3.2"
   },
   "peerDependencies": {},

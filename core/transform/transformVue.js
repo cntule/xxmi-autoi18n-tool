@@ -1,4 +1,5 @@
 const transformJs = require('./transformJs')
+const cacheSkipCommentHtml = require('../utils/cacheSkipCommentHtml')
 const cacheCommentHtml = require('../utils/cacheCommentHtml')
 const cacheI18nField = require('../utils/cacheI18nField')
 const { matchStringTpl, matchString } = require('./transform')
@@ -84,6 +85,8 @@ const matchTagContent = ({ code, options, ext, codeType, messages }) => {
  * @param {*} code
  */
 const matchVueTemplate = ({ code, options, ext, messages }) => {
+  // 暂存跳过i18n的注释
+  code = cacheSkipCommentHtml.stash(code, options)
   // 暂存注释
   code = cacheCommentHtml.stash(code, options)
   // 暂存已经设置的国际化字段
@@ -97,6 +100,8 @@ const matchVueTemplate = ({ code, options, ext, messages }) => {
     return `${startTag}${content.trim()}${endTag}`
   })
 
+  // 恢复跳过i18n的注释
+  code = cacheSkipCommentHtml.restore(code, options)
   // 恢复注释
   code = cacheCommentHtml.restore(code, options)
   // 恢复已经设置的国际化字段
