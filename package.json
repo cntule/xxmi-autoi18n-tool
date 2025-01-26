@@ -1,6 +1,6 @@
 {
   "name": "xxmi-autoi18n-tool",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "main": "./loaders/index.js",
   "license": "MIT",
   "bin": {

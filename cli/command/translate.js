@@ -2,11 +2,15 @@ const mergeIi8nConfig = require('../utils/mergeIi8nConfig')
 const log = require('../utils/log')
 const LocaleFile = require('../utils/localeFile')
 const translate = require('../../core/utils/translate').translate;
+const request = require('../../core/utils/translate').request;
 const baseUtils = require('../../core/utils/baseUtils');
 const _ = require('lodash');
 const path = require('path');
+
 async function run(messages, options) {
     const keys = Object.keys(messages);
+    const translationFailure = [];
+
     return new Promise((resolve, reject) => {
         if (keys.length <= 0) {
             return messages;
@@ -15,6 +19,10 @@ async function run(messages, options) {
             if (!key) {
                 key = keys.shift();
                 if (!key) {
+                    if (translationFailure.length > 0) {
+                        log.warning(`'-- 需要手动翻译的字段 --------------------------------------'`);
+                        console.log(translationFailure);
+                    }
                     resolve(messages);
                     return;
                 }
@@ -26,10 +34,21 @@ async function run(messages, options) {
                 return;
             }
 
-            translate(`${value}`, options.sign).then((result) => {
+            log.info(`'-- 翻译中 ---------------------------------------------------------------'`);
+            log.info(`key：${key}`);
+            log.info(`content：${value}`);
+            translate(`${value}`, options.sign).then(async (result) => {
                 let tran = _.get(result, 'fanyi.tran', '');
-                if(!tran){
+                if (!tran) {
                     tran = _.get(result, 'ce.word.trs[0].#text', '');
+                }
+                if (!tran) {
+                    tran = await request(value);
+                }
+                log.info(`tran：${tran}`);
+                if (!tran) {
+                    log.warning(`-- 翻车了，请手动翻译吧... -----------------------------`);
+                    translationFailure.push({key, value})
                 }
                 if (tran) {
                     messages[key] = tran;

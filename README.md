@@ -11,7 +11,7 @@
 5. 自定义处理astEnter的处理逻辑
 6. 自定义处理astObjectProperty的处理逻辑
 7. 不出处理Object key 的i18n转换
-8. 中文翻译成英文
+8. 中文翻译成英文（翻译仅用于学习研究）
 ```vue
 <template>
   <div class="hello">

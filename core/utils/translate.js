@@ -32,3 +32,21 @@ exports.translate = async function (q, sign = '0c3bff94629d96d290c083e2d057881e'
             });
     })
 }
+
+exports.request = async function (q) {
+    return new Promise((resolve, reject) => {
+        axios.get(`https://youdao.com/result?word=美丽中国。[=]${q}&lang=en`)
+            .then(function (response) {
+                // 处理成功情况
+                const regex = /<p class="trans-content"[^>]*>([\s\S]*?)<\/p>/g;
+                const m = regex.exec(response.data);
+                const tran = m && m[1] ? m[1] : '[=]';
+                resolve(tran.substring(tran.indexOf('[=]') + 3).trim());
+            })
+            .catch(function (error) {
+                // 处理错误情况
+                console.error(error);
+                resolve('');
+            });
+    })
+}
