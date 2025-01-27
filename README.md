@@ -122,9 +122,9 @@
 ## 安装
 
 ```bash
-npm i -D autoi18n-tool
+npm i -D xxmi-autoi18n-tool
 
-yarn add -D autoi18n-tool
+yarn add -D xxmi-autoi18n-tool
 ```
 
 ## 使用
