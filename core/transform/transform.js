@@ -76,7 +76,6 @@ const matchString = ({ code, options, messages, ext, codeType }) => {
     return key ;
   });
 
-
   // 替换所有包含中文的普通字符串
   code = code.replace(/^(["])(((?!\1).)*[\u4e00-\u9fa5]+((?!\1).)*)\1$/gm, (match, sign, value) => {
     return replaceStatement({ value, options, messages, ext, codeType, sign })
@@ -84,8 +83,11 @@ const matchString = ({ code, options, messages, ext, codeType }) => {
   code = code.replace(/^(['])(((?!\\1).)*[\u4e00-\u9fa5]+((?!\\1).)*)\1$/gm, (match, sign, value) => {
     return replaceStatement({ value, options, messages, ext, codeType, sign })
   })
-
+  // TODO 暂时这样做吧，后续再优化
   code = code.replace(/(['"])(.*?)(?:(?=(\\\\?))\2.)*?\1/gm, (match, sign, value) => {
+    if(/^'[a-zA-Z0-9]*'$/.test(match)){
+      return match;
+    }
     return replaceStatement({ value, options, messages, ext, codeType, sign })
   })
 
@@ -93,8 +95,6 @@ const matchString = ({ code, options, messages, ext, codeType }) => {
   code = code.replace(/%%expression_\d+%%/gim, (match) => {
     return cacheExpression[match]
   });
-
-
 
   return code
 }
