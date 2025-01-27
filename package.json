@@ -1,6 +1,6 @@
 {
   "name": "xxmi-autoi18n-tool",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "main": "./loaders/index.js",
   "license": "MIT",
   "bin": {
@@ -47,6 +47,7 @@
     "glob": "^7.1.7",
     "inquirer": "^8.1.1",
     "loadsh": "^0.0.4",
+    "p-limit": "3.1.0",
     "prettier": "^2.3.2"
   },
   "peerDependencies": {},

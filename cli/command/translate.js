@@ -6,60 +6,48 @@ const request = require('../../core/utils/translate').request;
 const baseUtils = require('../../core/utils/baseUtils');
 const _ = require('lodash');
 const path = require('path');
+const pLimit = require('p-limit')
+
+
+async function query(key, value, sign) {
+    return new Promise((resolve) => {
+        Promise.all([translate(value, sign), request(value)]).then((posts) => {
+            log.info('---- 翻译中 ----------------------------------------------------------------');
+            log.info(`key: ${key}`);
+            log.info(`value: ${value}`);
+            const [r1, r2] = posts;
+            const result = {key, value, tran: r1 || r2 || ''};
+            log.info(`tran: ${result.tran}`);
+            resolve(result);
+        });
+    })
+}
 
 async function run(messages, options) {
-    const keys = Object.keys(messages);
-    const translationFailure = [];
-
-    return new Promise((resolve, reject) => {
-        if (keys.length <= 0) {
-            return messages;
+    const startTime = Date.now();
+    const translateMessages = [];
+    for (const [key, value] of Object.entries(messages)) {
+        if (baseUtils.isChinese(value)) {
+            translateMessages.push({key, value})
         }
-        const exec = (key, value) => {
-            if (!key) {
-                key = keys.shift();
-                if (!key) {
-                    if (translationFailure.length > 0) {
-                        log.warning(`'-- 需要手动翻译的字段 --------------------------------------'`);
-                        console.log(translationFailure);
-                    }
-                    resolve(messages);
-                    return;
-                }
-                value = messages[key];
-            }
+    }
+    if (translateMessages.length <= 0) {
+        return Promise.resolve(messages);
+    }
 
-            if (!value.trim() || !baseUtils.isChinese(value)) {
-                exec();
-                return;
-            }
+    const limit = pLimit(options.translateLimit || 20);
+    const promises = translateMessages.map(item => {
+        return limit(() => query(item.key, item.value, options.sign))
+    })
 
-            log.info(`'-- 翻译中 ---------------------------------------------------------------'`);
-            log.info(`key：${key}`);
-            log.info(`content：${value}`);
-            translate(`${value}`, options.sign).then(async (result) => {
-                let tran = _.get(result, 'fanyi.tran', '');
-                if (!tran) {
-                    tran = _.get(result, 'ce.word.trs[0].#text', '');
-                }
-                if (!tran) {
-                    tran = await request(value);
-                }
-                log.info(`tran：${tran}`);
-                if (!tran) {
-                    log.warning(`-- 翻车了，请手动翻译吧... -----------------------------`);
-                    translationFailure.push({key, value})
-                }
-                if (tran) {
-                    messages[key] = tran;
-                }
-                exec();
-            }).catch((error) => {
-                console.log(error);
-                exec(key, value);
-            });
-        }
-        exec();
+    return new Promise(async (resolve) => {
+        const results = await Promise.all(promises);
+        results.forEach((item) => {
+            messages[item.key] = item.tran;
+        })
+        const endTime = Date.now();
+        log.success(`---- 翻译${results.length}条文本，耗时：${(endTime - startTime) / 1000}s -------------`);
+        resolve(messages);
     })
 }
 
