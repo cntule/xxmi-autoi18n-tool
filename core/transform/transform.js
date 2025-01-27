@@ -1,4 +1,5 @@
-const { md5, formatWhitespace } = require('../utils/baseUtils')
+const { md5, formatWhitespace } = require('../utils/baseUtils');
+const acorn = require('acorn');
 
 /**
  * 设置替换
@@ -61,7 +62,7 @@ const matchStringTpl = ({ code, options, messages, codeType, ext }) => {
  * @param {*} code
  */
 const matchString = ({ code, options, messages, ext, codeType }) => {
-
+  code = code.trim();
   // 缓存不需要处理的表达式
   let expressionIndex = 0;
   const cacheExpression = {
@@ -76,9 +77,15 @@ const matchString = ({ code, options, messages, ext, codeType }) => {
   });
 
 
-
   // 替换所有包含中文的普通字符串
-  code = code.replace(/(['"])(((?!\1).)*[\u4e00-\u9fa5]+((?!\1).)*)\1/gm, (match, sign, value) => {
+  code = code.replace(/^(["])(((?!\1).)*[\u4e00-\u9fa5]+((?!\1).)*)\1$/gm, (match, sign, value) => {
+    return replaceStatement({ value, options, messages, ext, codeType, sign })
+  })
+  code = code.replace(/^(['])(((?!\\1).)*[\u4e00-\u9fa5]+((?!\\1).)*)\1$/gm, (match, sign, value) => {
+    return replaceStatement({ value, options, messages, ext, codeType, sign })
+  })
+
+  code = code.replace(/(['"])(.*?)(?:(?=(\\\\?))\2.)*?\1/gm, (match, sign, value) => {
     return replaceStatement({ value, options, messages, ext, codeType, sign })
   })
 
@@ -86,6 +93,8 @@ const matchString = ({ code, options, messages, ext, codeType }) => {
   code = code.replace(/%%expression_\d+%%/gim, (match) => {
     return cacheExpression[match]
   });
+
+
 
   return code
 }

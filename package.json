@@ -1,6 +1,6 @@
 {
   "name": "xxmi-autoi18n-tool",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "./loaders/index.js",
   "license": "MIT",
   "bin": {
@@ -39,16 +39,20 @@
     "@babel/traverse": "^7.14.8",
     "@babel/types": "^7.14.8",
     "@vue/cli-service": "~4.5.0",
+    "acorn": "^8.14.0",
     "axios": "^1.7.9",
     "chalk": "^4.1.1",
     "commander": "^8.0.0",
     "crypto-js": "^4.1.1",
     "form-data": "^4.0.1",
     "glob": "^7.1.7",
+    "htmlparser2": "^10.0.0",
     "inquirer": "^8.1.1",
     "loadsh": "^0.0.4",
     "p-limit": "3.1.0",
-    "prettier": "^2.3.2"
+    "parse5": "^7.2.1",
+    "prettier": "^2.3.2",
+    "vue-template-compiler": "^2.7.16"
   },
   "peerDependencies": {},
   "devDependencies": {}
