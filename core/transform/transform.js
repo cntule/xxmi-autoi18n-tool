@@ -68,7 +68,7 @@ const matchString = ({ code, options, messages, ext, codeType }) => {
   const cacheExpression = {
     // '%%expression_0%%':"error == '错误1'"
   }
-  const regex = /([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(==|===)\s*(['"])(((?!\3).)*[\u4e00-\u9fa5]+((?!\3).)*)\3/gm;
+  const regex = /([a-zA-Z_$][\w$]*)\s*(===?)\s*((["'])((?:\\.|(?!\4)[\s\S])*?[\u4e00-\u9fa5]+(?:\\.|(?!\4)[\s\S])*?\4)(?:\s*\+\s*\4(?:\\.|(?!\4)[\s\S])*?\4)*)/gm
   code = code.replace(regex,(match,sign,quote)=>{
     const key = `%%expression_${expressionIndex}%%`;
     cacheExpression[key] = match;
@@ -77,17 +77,21 @@ const matchString = ({ code, options, messages, ext, codeType }) => {
   });
 
   // 替换所有包含中文的普通字符串
-  code = code.replace(/^(["])(((?!\1).)*[\u4e00-\u9fa5]+((?!\1).)*)\1$/gm, (match, sign, value) => {
-    return replaceStatement({ value, options, messages, ext, codeType, sign })
-  })
-  code = code.replace(/^(['])(((?!\\1).)*[\u4e00-\u9fa5]+((?!\\1).)*)\1$/gm, (match, sign, value) => {
-    return replaceStatement({ value, options, messages, ext, codeType, sign })
-  })
-  // TODO 暂时这样做吧，后续再优化
-  code = code.replace(/(['"])(.*?)(?:(?=(\\\\?))\2.)*?\1/gm, (match, sign, value) => {
-    if(/^'[a-zA-Z0-9]*'$/.test(match)){
-      return match;
-    }
+  // code = code.replace(/^(["])(((?!\1).)*[\u4e00-\u9fa5]+((?!\1).)*)\1$/gm, (match, sign, value) => {
+  //   return replaceStatement({ value, options, messages, ext, codeType, sign })
+  // })
+  // code = code.replace(/^(['])(((?!\\1).)*[\u4e00-\u9fa5]+((?!\\1).)*)\1$/gm, (match, sign, value) => {
+  //   return replaceStatement({ value, options, messages, ext, codeType, sign })
+  // })
+  // // TODO 暂时这样做吧，后续再优化
+  // code = code.replace(/(['"])(.*?)(?:(?=(\\\\?))\2.)*?\1/gm, (match, sign, value) => {
+  //   if(/^'[a-zA-Z0-9]*'$/.test(match)){
+  //     return match;
+  //   }
+  //   return replaceStatement({ value, options, messages, ext, codeType, sign })
+  // })
+
+  code = code.replace(/(["'])((?:\\.|(?!\1)[\s\S])*?[\u4e00-\u9fa5]+(?:\\.|(?!\1)[\s\S])*?)\1/gm, (match, sign, value) => {
     return replaceStatement({ value, options, messages, ext, codeType, sign })
   })
 

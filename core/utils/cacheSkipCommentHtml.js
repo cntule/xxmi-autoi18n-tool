@@ -18,20 +18,20 @@ module.exports = {
     sourceCode = sourceCode.replace(new RegExp('(<!--\\s*?(skip-i18n-start)\\s*?-->)|(<!--\\s*?(skip-i18n-end)\\s*?-->)', 'gim'), (math, commentStart, start, commentEnd, end) => {
       let value = '';
       if (start) {
-        const key = `<%%_skip_i18n_start_comment_html_${startNo++}%%>`;
+        const key = `<!--%%skip_i18n_start_comment_html_${startNo++}%%-->`;
         this.skipCommentCache[key] = math;
         return key;
       }
       if (end) {
-        const key = `<%%_skip_i18n_end_comment_html_${endNo++}%%>`;
+        const key = `<!--%%skip_i18n_end_comment_html_${endNo++}%%-->`;
         this.skipCommentCache[key] = math;
         return key;
       }
       return value;
     });
 
-    sourceCode = sourceCode.replace(new RegExp(`<%%_skip_i18n_start_comment_html_([\\d]+)%%>[\\s\\S]*?<%%_skip_i18n_end_comment_html_([\\d]+)%%>`, 'gim'), (math) => {
-      const key = `<%%_skip_i18n_content_comment_html_${contentNo++}%%>`;
+    sourceCode = sourceCode.replace(new RegExp(`<!--%%skip_i18n_start_comment_html_([\\d]+)%%-->[\\s\\S]*?<!--%%skip_i18n_end_comment_html_([\\d]+)%%-->`, 'gim'), (math) => {
+      const key = `<!--%%skip_i18n_content_comment_html_${contentNo++}%%-->`;
       this.skipCommentCache[key] = math;
       return key;
     })
@@ -42,16 +42,16 @@ module.exports = {
    * 恢复之前删除的注释
    */
   restore(sourceCode, options) {
-    sourceCode = sourceCode.replace(new RegExp(`(<%%_skip_i18n_content_comment_html_([\\d]+)%%>)`, 'gim'), (math) => {
+    sourceCode = sourceCode.replace(new RegExp(`(<!--%%skip_i18n_content_comment_html_([\\d]+)%%-->)`, 'gim'), (math) => {
       return this.skipCommentCache[math];
     })
-    sourceCode = sourceCode.replace(new RegExp(`(<%%_skip_i18n_start_comment_html_[\\d]+%%>)|(<%%_skip_i18n_end_comment_html_[\\d]+%%>)`, 'gim'), (math, start, end) => {
+    sourceCode = sourceCode.replace(new RegExp(`(<!--%%skip_i18n_start_comment_html_[\\d]+%%-->)|(<!--%%skip_i18n_end_comment_html_[\\d]+%%-->)`, 'gim'), (math, start, end) => {
       if (start || end) {
         return this.skipCommentCache[start || end]
       }
       return '';
     })
-    this.commentsCache = {} // 清除缓存
+    this.skipCommentCache = {} // 清除缓存
     return sourceCode
   }
 }

@@ -4,8 +4,13 @@ const cacheCommentHtml = require('../utils/cacheCommentHtml')
 const cacheI18nField = require('../utils/cacheI18nField')
 const {matchStringTpl, matchString} = require('./transform')
 const baseUtils = require('../utils/baseUtils')
-
+const parse5 = require('parse5');
 /**
+ * 处理vue文件
+ * @param {*} options.code 源代码
+ * @param {*} options.file 文件对象;
+
+ /**
  * 匹配vue标签中的属性
  * @param {*} code
  */
@@ -74,43 +79,60 @@ const regList = [
     new RegExp(`${closeSign}${value}${closeSign}`, 'gm'),
 ]
 
-/**
- * 匹配查找标签内容（包含中文的内容）
- * @param {*} code
- */
-const matchTagContent = ({code, options, ext, codeType, messages}) => {
-
-    for (const reg of regList) {
-        code = code.replace(reg, (match, beforeSign, value, afterSign) => {
-            // 将所有不在 {{}} 内的内容，用 {{}} 包裹起来
-            const outValues = value
-                .replace(/({{)((?:.|\r?\n)+?)(}})/gm, ',,')
-                .split(',,')
-                .filter(item => item)
-            outValues.forEach(item => {
-                value = value.replace(item, value => {
-                    // 是否是中文
-                    if (/[\u4e00-\u9fa5]+/g.test(value)) {
-                        // 把单引号转义，防止{{‘xxx'xx’}} 的错误
-                        value = value.replace(/(?<!\\)'/g, "\\'");
-                        value = `{{'${value.trim()}'}}`
-                    }
-                    return value
-                })
-            })
-            // 对所有的{{}}内的内容进行国际化替换
-            value = value.replace(/({{)((?:.|\r?\n)+?)(}})/gm, (match, beforeSign, value, afterSign) => {
-                // value = ast({ code: value, options, messages, ext }) // 防止性能问题 改用正则匹配
-                // 匹配字符串模板
-                value = matchStringTpl({code: value, options, messages, codeType, ext})
-                // 进行字符串匹配替换
-                value = matchString({code: value, options, messages, codeType, ext})
-                return `${beforeSign}${value.trim()}${afterSign}`
-            })
-            return `${beforeSign}${value.trim()}${afterSign}`
+const handlerText = ({code, options, ext, codeType, messages}) => {
+    // 将所有不在 {{}} 内的内容，用 {{}} 包裹起来
+    let value = code;
+    const outValues = value
+        .replace(/({{)((?:.|\r?\n)+?)(}})/gm, ',,')
+        .split(',,')
+        .filter(item => item)
+    outValues.forEach(item => {
+        value = value.replace(item, value => {
+            // 是否是中文
+            if (/[\u4e00-\u9fa5]+/g.test(value)) {
+                // 把单引号转义，防止{{‘xxx'xx’}} 的错误
+                value = value.replace(/(?<!\\)'/g, "\\'");
+                value = `{{'${value.trim()}'}}`
+            }
+            return value
         })
+    })
+    // 对所有的{{}}内的内容进行国际化替换
+    value = value.replace(/({{)((?:.|\r?\n)+?)(}})/gm, (match, beforeSign, value, afterSign) => {
+        // value = ast({ code: value, options, messages, ext }) // 防止性能问题 改用正则匹配
+        // 匹配字符串模板
+        value = matchStringTpl({code: value, options, messages, codeType, ext})
+        // 进行字符串匹配替换
+        value = matchString({code: value, options, messages, codeType, ext})
+        return `${beforeSign}${value.trim()}${afterSign}`
+    });
+    return value;
+}
+
+const matchTagContent = ({code, options, ext, codeType, messages}) => {
+    const customTreeAdapter = {
+        ...parse5.defaultTreeAdapter,
+    };
+
+    const document = parse5.parseFragment(code,{treeAdapter: customTreeAdapter});
+
+    function modifyTextNodes(node) {
+        if (node.childNodes) {
+            node.childNodes.forEach(child => {
+                if (child.nodeName === '#text') {
+                    if (baseUtils.isChinese(child.value)) {
+                        child.value = handlerText({code: child.value, options, ext, codeType, messages});
+                    }
+                } else {
+                    modifyTextNodes(child);
+                }
+            });
+        }
     }
-    return code
+
+    modifyTextNodes(document);
+    const htmlString = parse5.serialize(document, {treeAdapter: customTreeAdapter});
+    return htmlString;
 }
 
 /**
@@ -133,10 +155,10 @@ const matchVueTemplate = ({code, options, ext, messages}) => {
         return `${startTag}${content.trim()}${endTag}`
     })
 
-    // 恢复跳过i18n的注释
-    code = cacheSkipCommentHtml.restore(code, options)
     // 恢复注释
     code = cacheCommentHtml.restore(code, options)
+    // 恢复跳过i18n的注释
+    code = cacheSkipCommentHtml.restore(code, options)
     // 恢复已经设置的国际化字段
     code = cacheI18nField.restore(code, options)
     return code
