@@ -21,7 +21,10 @@
     "loaders"
   ],
   "author": "Gertyxs <gertyxs@outlook.com>",
-  "scripts": {},
+  "scripts": {
+    "pf": "node test/prettier-format/index.js",
+    "p5": "node test/parse5/index.js"
+  },
   "dependencies": {
     "@babel/core": "^7.14.8",
     "@babel/generator": "^7.14.8",
@@ -51,6 +54,7 @@
     "loadsh": "^0.0.4",
     "p-limit": "3.1.0",
     "parse5": "^7.2.1",
+    "parse5-htmlparser2-tree-adapter": "^7.1.0",
     "prettier": "^2.3.2",
     "vue-template-compiler": "^2.7.16"
   },

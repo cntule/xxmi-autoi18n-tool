@@ -20,7 +20,8 @@
     "vue-i18n": "8.25.0",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "^3.5.1",
-    "vuex": "^3.6.2"
+    "vuex": "^3.6.2",
+    "whatwg-mimetype": "^3.0.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~5.0.0",

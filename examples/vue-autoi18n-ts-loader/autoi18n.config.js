@@ -13,11 +13,11 @@ module.exports = {
     setMessageKey: false,
     i18nInstance: "import i18n from '@/i18n';",
     prettier: {
-        retainQuotesOnKeys: true, // 确保保留对象键的引号
         singleQuote: true,
-        quoteProps: 'preserve',
+        quoteProps: 'preserve', // 保留对象键的引号
         trailingComma: 'es5',
-        endOfLine: 'lf'
+        endOfLine: 'lf',
+        htmlWhitespaceSensitivity: "ignore", // HTML 空白敏感度
     },
     /**
      * 自定义astEnter节点处理函数
