@@ -111,13 +111,13 @@ const handlerText = ({code, options, ext, codeType, messages}) => {
 
 const matchTagContent = ({code, options, ext, codeType, messages}) => {
     const customTreeAdapter = {
-        ...parse5.defaultTreeAdapter,
+        ...parse5.defaultTreeAdapter
     };
 
-    const document = parse5.parseFragment(code,{treeAdapter: customTreeAdapter});
+    const document = parse5.parseFragment(code, {treeAdapter: customTreeAdapter});
 
     function modifyTextNodes(node) {
-        if (node.childNodes) {
+        if (node.childNodes && node.childNodes.length) {
             node.childNodes.forEach(child => {
                 if (child.nodeName === '#text') {
                     if (baseUtils.isChinese(child.value)) {
@@ -127,6 +127,8 @@ const matchTagContent = ({code, options, ext, codeType, messages}) => {
                     modifyTextNodes(child);
                 }
             });
+        } else if (node.content && node.content.childNodes && node.content.childNodes.length) {
+            modifyTextNodes(node.content);
         }
     }
 
@@ -148,6 +150,8 @@ const matchVueTemplate = ({code, options, ext, messages}) => {
     code = cacheI18nField.stash(code, options)
     // 开始匹配
     code = code.replace(/(<template[^>]*>)([\s\S]*)(<\/template>)/gim, (match, startTag, content, endTag) => {
+        // console.log('temp===========================ccccc');
+        // console.log(content);
         // 匹配模板里面待中文的属性 匹配属性
         content = matchTagAttr({code: content, options, ext, codeType: 'vueTag', messages})
         // 匹配模板里面标签包含中文的内容 匹配内容

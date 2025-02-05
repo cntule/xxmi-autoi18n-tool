@@ -1,6 +1,6 @@
 <template id="app">
   <div id="app">
-    <div :title="errorTip == '错误1属性' ? '属性1' : ''"></div>
+    <div :title="errorTip == '错误1属性1' ? '属性1' : ''"></div>
     <div :title="errorTip === '错误2属性' ? (errorTip == '错误3' ? '错误4' : '错误5') : '错误6'"></div>
     <div :title="errorTip == '错误10属性' ? '错误11' : errorTip === '错误12' ? '错误13' : '错误14'"></div>
     <div :title="errorTip === '错误20属性' ? ['属性21'] : ''"></div>
