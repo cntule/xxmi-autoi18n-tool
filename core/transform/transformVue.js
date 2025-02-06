@@ -4,6 +4,7 @@ const cacheCommentHtml = require("../utils/cacheCommentHtml");
 const cacheI18nField = require("../utils/cacheI18nField");
 const { matchStringTpl, matchString } = require("./transform");
 const baseUtils = require("../utils/baseUtils");
+const prettier = require("../prettier/index");
 /**
  * 处理vue文件
  * @param {*} options.code 源代码
@@ -134,6 +135,50 @@ const handlerText = ({ code, options, ext, codeType, messages }) => {
 };
 
 const matchTagContent = ({ code, options, ext, codeType, messages }) => {
+    function modifyTextNodes(node) {
+        if (node.children && node.children.length) {
+            node.children.forEach((child) => {
+                if (child.type === "text") {
+                    if (baseUtils.isChinese(child.value)) {
+                        child.value = handlerText({
+                            code: child.value,
+                            options,
+                            ext,
+                            codeType,
+                            messages,
+                        });
+                    }
+                } else {
+                    modifyTextNodes(child);
+                }
+            });
+        }
+    }
+
+    code = prettier.format(code, {
+        handleAst:(ast,text)=>{
+            modifyTextNodes(ast);
+        },
+        // filepath:'aaa.vue',
+        parser: "vue",
+        singleQuote: true,
+        quoteProps: "preserve", // 保留对象键的引号
+        trailingComma: "es5",
+        endOfLine: "lf",
+        /**
+         * HTML 空白敏感度
+         * 结束标签中不换行
+         * <template>
+         *     ....
+         * </template
+         * >
+         */
+        htmlWhitespaceSensitivity: "ignore"
+    });
+    return code;
+};
+
+const matchTagContent2 = ({ code, options, ext, codeType, messages }) => {
   let index = 1000;
   let commentIndex = 0;
   const cache = {};
@@ -207,6 +252,7 @@ const matchVueTemplate = ({ code, options, ext, messages }) => {
         codeType: "vueTag",
         messages,
       });
+      content = `${startTag}${content.trim()}${endTag}`;
       // 匹配模板里面标签包含中文的内容 匹配内容
       content = matchTagContent({
         code: content,
@@ -215,7 +261,7 @@ const matchVueTemplate = ({ code, options, ext, messages }) => {
         codeType: "vueTag",
         messages,
       });
-      return `${startTag}${content.trim()}${endTag}`;
+      return content;
     }
   );
 

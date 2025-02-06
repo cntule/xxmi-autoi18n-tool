@@ -1,8 +1,44 @@
 <template>
   <div class="he>llo">
+    <Tips>
+      <div>i18n.tc('这是默认的插槽')</div>
+      <template v-slot:content>
+        <div style="text-align: center">i18n.tc('这是一个插槽内容')</div>
+      </template>
+    </Tips>
+    <List v-if="msg === '天\'1'" name="list">
+      <template #content>
+        <div>i18n.tc('天空')</div>
+      </template>
+    </List>
+    <a
+      v-if="msg2"
+      :class="
+        !colProp.props.tableData[colProp.props.$index].enable
+          ? 'disabledText'
+          : ''
+      "
+      :key="colProp.props.$index + 'edit'"
+      @click="asyncEditMethod(colProp.props.tableData[colProp.props.$index])"
+    >
+      i18n.tc('编辑1')
+    </a>
+    <slot />
+    <el-button
+      type="primary"
+      @click="exportData"
+      v-if="msg1"
+      :loading="loading"
+    >
+      i18n.tc('导出1')
+    </el-button>
+    <el-button type="primary" @click="exportData" v-else :loading="loading">
+      i18n.tc('导出2')
+    </el-button>
     <Show :personName.sync="person.name" />
     i18n.tc('中间1')
     <Show2 v-if="msg1 == 100" :personName.sync="person.name ? 'a<aa' : 'a>'" />
+    <slot name="abc" />
     <Tips>
       i18n.tc('中间4')
       <template v-slot:content>
@@ -50,3 +86,6 @@
     <hr />
   </div>
 </template>
+<script setup lang="ts">
+import Tips from '../../examples/vue-autoi18n-ts-loader/src/components/Tips.vue';
+</script>
