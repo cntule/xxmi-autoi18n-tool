@@ -4,7 +4,6 @@ const cacheCommentHtml = require("../utils/cacheCommentHtml");
 const cacheI18nField = require("../utils/cacheI18nField");
 const { matchStringTpl, matchString } = require("./transform");
 const baseUtils = require("../utils/baseUtils");
-const parse5 = require("parse5");
 /**
  * 处理vue文件
  * @param {*} options.code 源代码
@@ -185,48 +184,6 @@ const matchTagContent = ({ code, options, ext, codeType, messages }) => {
   return code;
 };
 
-const matchTagContent2 = ({ code, options, ext, codeType, messages }) => {
-  const customTreeAdapter = {
-    ...parse5.defaultTreeAdapter,
-  };
-
-  const document = parse5.parseFragment(code, {
-    treeAdapter: customTreeAdapter,
-  });
-
-  function modifyTextNodes(node) {
-    if (node.childNodes && node.childNodes.length) {
-      node.childNodes.forEach((child) => {
-        if (child.nodeName === "#text") {
-          if (baseUtils.isChinese(child.value)) {
-            child.value = handlerText({
-              code: child.value,
-              options,
-              ext,
-              codeType,
-              messages,
-            });
-          }
-        } else {
-          modifyTextNodes(child);
-        }
-      });
-    } else if (
-      node.content &&
-      node.content.childNodes &&
-      node.content.childNodes.length
-    ) {
-      modifyTextNodes(node.content);
-    }
-  }
-
-  modifyTextNodes(document);
-  const htmlString = parse5.serialize(document, {
-    treeAdapter: customTreeAdapter,
-  });
-  return htmlString;
-};
-
 /**
  * 匹配vue模板部分
  * @param {*} code
@@ -240,10 +197,8 @@ const matchVueTemplate = ({ code, options, ext, messages }) => {
   code = cacheI18nField.stash(code, options);
   // 开始匹配
   code = code.replace(
-    /(<template[^>]*>)([\s\S]*)(<\/template>)/gim,
+    /(<template[^>]*>)([\s\S]*)(<\/template\s*>)/gim,
     (match, startTag, content, endTag) => {
-      // console.log('temp===========================ccccc');
-      // console.log(content);
       // 匹配模板里面待中文的属性 匹配属性
       content = matchTagAttr({
         code: content,

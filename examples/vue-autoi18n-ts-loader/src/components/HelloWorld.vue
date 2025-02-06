@@ -15,6 +15,7 @@
     <p>{{ $t('poeticRomance') }}</p>
     <hr>
     <Tips>
+      <div>这是默认的插槽</div>
       <template v-slot:content>
         <div style="text-align: center">这是一个插槽内容</div>
       </template>

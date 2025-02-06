@@ -100,9 +100,18 @@ module.exports = {
         tagName = tagName ? tagName : '\\w*'
         // 标签编号对象
         let tagsNo = {}
+        /**
+         * 处理结束标签换行的问题
+         * </template
+         * >
+         * 这种情况会造成 prettier 格式化错误
+         */
+        // code.replace(/<\/([a-zA-Z][\w-]*)\s*>/gm,(math)=>{
+        //     console.log(math);
+        // });
         // 开始标签编号
         code = code.replace(
-            new RegExp(`(<(${tagName})((?:\\s+[^>]*)|)>)|(<\\/(${tagName})>)|(<(${tagName})((?:\\s+[^>]*)|)\\/>)`, 'gim'),
+            new RegExp(`(<(${tagName})((?:\\s+[^>]*)|)>)|(<\\/(${tagName})\\s*>)|(<(${tagName})((?:\\s+[^>]*)|)\\/>)`, 'gim'),
             (match, startTag, starTagName, startTagCon, endTag, endTagName, closeTag, closeTagName, closeTagCon) => {
                 // 如果是闭合标签  <img /> 类似这种
                 let value = ''

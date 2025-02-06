@@ -33,6 +33,7 @@ module.exports = async function (programOption) {
   let targetFiles = baseUtils.getSourceFiles(options)
   // 开始读取文件进行操作
   for (let i = 0; i < targetFiles.length; i++) {
+    // log.info(`> start: ${targetFiles[i].filePath}`);
     const sourceCode = fs.readFileSync(targetFiles[i].filePath, 'utf8');
     let code = transform({ code: sourceCode, targetFile: targetFiles[i], options, messages })
     if (programOption.replace) {
