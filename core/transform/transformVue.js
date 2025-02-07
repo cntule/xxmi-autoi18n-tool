@@ -2,7 +2,11 @@ const transformJs = require("./transformJs");
 const cacheSkipCommentHtml = require("../utils/cacheSkipCommentHtml");
 const cacheCommentHtml = require("../utils/cacheCommentHtml");
 const cacheI18nField = require("../utils/cacheI18nField");
-const { matchStringTpl, matchString } = require("./transform");
+const {
+  matchStringTpl,
+  matchString,
+  vueAttrValueMatchString,
+} = require("./transform");
 const baseUtils = require("../utils/baseUtils");
 const prettier = require("../prettier/index");
 /**
@@ -75,31 +79,75 @@ const matchTagAttr = ({ code, options, ext, codeType, messages }) => {
   return code;
 };
 
-const beforeSign = "(<[a-zA-Z0-9_-]+[^>/]*>)";
-const value = "([^><]*[\\u4e00-\\u9fa5]+[^><]*)";
-const endSign = "(</[a-zA-Z0-9_-]+>)";
-const closeSign = "(<[a-zA-Z0-9_-]+[^>/]*/>)";
+function handleAttr({
+  node,
+  attrNode,
+  code,
+  options,
+  ext,
+  codeType,
+  messages,
+  file,
+}) {
+  let name = attrNode.name;
+  let value = attrNode.value;
+  // 不包含中文，不处理
+  if (!baseUtils.isChinese(value)) return;
 
-const regList = [
-  // <div></div>
-  new RegExp(`${beforeSign}${value}${endSign}`, "gm"),
-  // </div><div>
-  new RegExp(`${endSign}${value}${beforeSign}`, "gm"),
-  // <div><div>
-  new RegExp(`${beforeSign}${value}${beforeSign}`, "gm"),
-  // </div></div>
-  new RegExp(`${endSign}${value}${endSign}`, "gm"),
-  // <div><br/>
-  new RegExp(`${beforeSign}${value}${closeSign}`, "gm"),
-  // <br/></div>
-  new RegExp(`${closeSign}${value}${endSign}`, "gm"),
-  // </div><br/>
-  new RegExp(`${endSign}${value}${closeSign}`, "gm"),
-  // <br/><div>
-  new RegExp(`${closeSign}${value}${beforeSign}`, "gm"),
-  // <br/><br/>
-  new RegExp(`${closeSign}${value}${closeSign}`, "gm"),
-];
+  // 白名单内的属性，不进行替换
+  if (options.ignoreTagAttr.includes(name)) {
+    return;
+  }
+
+  // 除了 v-bind ，其他 v-或者# 开头的属性不处理
+  if (/^(?!v-bind\b)(v-|#).*/.test(name)) return;
+
+  // 返回 true 表示不处理该属性
+  const result =
+    options.vueAstNodeAttr &&
+    options.vueAstNodeAttr({ node, attrNode, file, filePath: file.filePath });
+  if (result) return;
+
+  // 非 v-、@、: 开头的普通属性，要转为 : 模式，value 加上 ""（双引号）,
+  if (/^(?![:@]|v-).*/.test(name)) {
+    name = `:${name}`;
+    value = `"${value}"`;
+  }
+  // 匹配字符串模板
+  value = matchStringTpl({
+    code: value,
+    options,
+    messages,
+    codeType,
+    ext,
+  });
+  // 进行字符串匹配替换
+  value = vueAttrValueMatchString({
+    code: value,
+    options,
+    messages,
+    codeType,
+    ext,
+  });
+  attrNode.name = name;
+  attrNode.value = value;
+}
+
+function handleAttrs({ node, code, options, ext, codeType, messages, file }) {
+  if (node.type !== "element") return;
+  for (const attrNode of node.attrs) {
+    handleAttr({
+      node,
+      attrNode,
+      code,
+      options,
+      ext,
+      codeType,
+      messages,
+      file,
+    });
+  }
+}
 
 const handlerText = ({ code, options, ext, codeType, messages }) => {
   // 将所有不在 {{}} 内的内容，用 {{}} 包裹起来
@@ -134,97 +182,70 @@ const handlerText = ({ code, options, ext, codeType, messages }) => {
   return value;
 };
 
-const matchTagContent = ({ code, options, ext, codeType, messages }) => {
-    function modifyTextNodes(node) {
-        if (node.children && node.children.length) {
-            node.children.forEach((child) => {
-                if (child.type === "text") {
-                    if (baseUtils.isChinese(child.value)) {
-                        child.value = handlerText({
-                            code: child.value,
-                            options,
-                            ext,
-                            codeType,
-                            messages,
-                        });
-                    }
-                } else {
-                    modifyTextNodes(child);
-                }
+const matchTagContent = ({ code, options, ext, codeType, messages, file }) => {
+  const vueAst = (ast) => {
+    return (
+      options.vueAst && options.vueAst({ ast, file, filePath: file.filePath })
+    );
+  };
+  const vueAstNode = (node) => {
+    return (
+      options.vueAstNode &&
+      options.vueAstNode({ node, file, filePath: file.filePath })
+    );
+  };
+
+  const vueAstNodeText = (node) => {
+    return (
+      options.vueAstNodeText &&
+      options.vueAstNodeText({ node, file, filePath: file.filePath })
+    );
+  };
+
+  function traversalNodes(node) {
+    if (!vueAstNode(node)) {
+      handleAttrs({ node, code, options, ext, codeType, messages, file });
+    }
+    if (node.children && node.children.length) {
+      node.children.forEach((child) => {
+        if (child.type === "text") {
+          if (!vueAstNodeText(child) && baseUtils.isChinese(child.value)) {
+            child.value = handlerText({
+              code: child.value,
+              options,
+              ext,
+              codeType,
+              messages,
             });
+          }
+        } else {
+          traversalNodes(child);
         }
+      });
     }
+  }
 
-    code = prettier.format(code, {
-        handleAst:(ast,text)=>{
-            modifyTextNodes(ast);
-        },
-        // filepath:'aaa.vue',
-        parser: "vue",
-        singleQuote: true,
-        quoteProps: "preserve", // 保留对象键的引号
-        trailingComma: "es5",
-        endOfLine: "lf",
-        /**
-         * HTML 空白敏感度
-         * 结束标签中不换行
-         * <template>
-         *     ....
-         * </template
-         * >
-         */
-        htmlWhitespaceSensitivity: "ignore"
-    });
-    return code;
-};
-
-const matchTagContent2 = ({ code, options, ext, codeType, messages }) => {
-  let index = 1000;
-  let commentIndex = 0;
-  const cache = {};
-
-  code = code.replace(/<!--([\s\S]*?)-->/gm, (math) => {
-    const key = `<plachodercomment${commentIndex++}>`;
-    cache[key] = math;
-    return key;
-  });
-
-  code = code.replace(
-    /<\/?[^\s>]+(?:\s+[^\s=]+(?:(?::[^\s=]+)|=(?:"[^"]*"|'[^']*'|[^\s>]*)))*\s*\/?>/gm,
-    (math, p1, p2, p3) => {
-      let key = `<%%${index}%%start%%>`;
-      let placeholder = key;
-      if (index > 1000) {
-        placeholder = `<%%${index - 1}%%end%%>${key}`;
+  code = prettier.format(code, {
+    handleAst: (ast, text) => {
+      if (!vueAst(ast)) {
+        traversalNodes(ast);
       }
-      cache[key] = math;
-      index++;
-      return placeholder;
-    }
-  );
-
-  code = code.replace(
-    /(<%%\d+%%start%%>)([\s\S]*?)(<%%\d+%%end%%>)/gm,
-    (math, start, value, end) => {
-      if (baseUtils.isChinese(value)) {
-        return `${start}${handlerText({
-          code: value.trim(),
-          options,
-          ext,
-          codeType,
-          messages,
-        })}${end}`;
-      }
-      return math;
-    }
-  );
-
-  code = code.replace(/(<%%(\d+)%%(start|end)%%>)/gm, (math, p1, p2) => {
-    return cache[math] || "";
-  });
-
-  code = code.replace(/<plachodercomment(\d+)>/gm, (math, p1, p2) => {
-    return cache[math] || "";
+    },
+    // filepath:'aaa.vue',
+    parser: "vue",
+    singleQuote: true,
+    quoteProps: "preserve", // 保留对象键的引号
+    trailingComma: "es5",
+    endOfLine: "lf",
+    /**
+     * HTML 空白敏感度
+     * 结束标签中不换行
+     * <template>
+     *     ....
+     * </template
+     * >
+     */
+    htmlWhitespaceSensitivity: "ignore",
   });
   return code;
 };
@@ -233,7 +254,7 @@ const matchTagContent2 = ({ code, options, ext, codeType, messages }) => {
  * 匹配vue模板部分
  * @param {*} code
  */
-const matchVueTemplate = ({ code, options, ext, messages }) => {
+const matchVueTemplate = ({ code, file, options, ext, messages }) => {
   // 暂存跳过i18n的注释
   code = cacheSkipCommentHtml.stash(code, options);
   // 暂存注释
@@ -245,13 +266,13 @@ const matchVueTemplate = ({ code, options, ext, messages }) => {
     /(<template[^>]*>)([\s\S]*)(<\/template\s*>)/gim,
     (match, startTag, content, endTag) => {
       // 匹配模板里面待中文的属性 匹配属性
-      content = matchTagAttr({
-        code: content,
-        options,
-        ext,
-        codeType: "vueTag",
-        messages,
-      });
+      // content = matchTagAttr({
+      //   code: content,
+      //   options,
+      //   ext,
+      //   codeType: "vueTag",
+      //   messages,
+      // });
       content = `${startTag}${content.trim()}${endTag}`;
       // 匹配模板里面标签包含中文的内容 匹配内容
       content = matchTagContent({
@@ -260,6 +281,7 @@ const matchVueTemplate = ({ code, options, ext, messages }) => {
         ext,
         codeType: "vueTag",
         messages,
+        file,
       });
       return content;
     }
@@ -312,7 +334,7 @@ const matchVueJs = ({ code, options, file, ext, messages }) => {
 module.exports = function ({ code, file, options, ext = ".vue", messages }) {
   // 处理模板
   code = baseUtils.handleNestedTags({ code, tagName: "template" }, (code) => {
-    return matchVueTemplate({ code, options, ext, messages });
+    return matchVueTemplate({ code, file, options, ext, messages });
   });
   // 处理js
   code = baseUtils.handleNestedTags({ code, tagName: "script" }, (code) => {
