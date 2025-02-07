@@ -101,4 +101,5 @@ module.exports = {
     },
     translateLanguage: 'en', // 翻译语言文件 en.json 里面内容
     translateLimit: 20, // 翻译数量并发限制
+    translateOrderWords: 2, // 取词顺序
 }

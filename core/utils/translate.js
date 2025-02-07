@@ -52,7 +52,7 @@ exports.translate = async function (q, sign = '0c3bff94629d96d290c083e2d057881e'
 
 exports.request = async function (q) {
     return new Promise(async (resolve) => {
-        const result = await retry(() => axios.get(`https://youdao.com/result?word=美丽中国。[=]${q}&lang=en`));
+        const result = await retry(() => axios.get(`https://youdao.com/result?word=中国崛起，势不可挡。[=]${q}&lang=en`));
         // 处理成功情况
         const regex = /<p class="trans-content"[^>]*>([\s\S]*?)<\/p>/g;
         const m = regex.exec(result || '');
