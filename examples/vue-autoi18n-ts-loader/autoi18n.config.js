@@ -5,7 +5,13 @@ module.exports = {
   localePath: "./src/locales",
   localeFileExt: ".json",
   extensions: [],
-  exclude: ["./src/locales/*.{js,ts,json}", "./src/shims-*.*"],
+  exclude: [
+    "./src/i18n/*.*",
+    "./src/locales/*.{js,ts,json}",
+    "./src/router/**",
+    "./src/store/**",
+    "./src/shims-*.*",
+  ],
   ignoreMethods: ["i18n.t", "$t"],
   ignoreTagAttr: ["class", "style", "src", "href", "width", "height"],
   i18nObjectMethod: "i18n.t",
@@ -62,10 +68,10 @@ module.exports = {
     filePath,
     baseUtils,
   }) => {
-    if (baseUtils.isPathEndsWith(filePath,'src/components/HelloWorld.vue')) {
-        if (keyName === 'prop' && valueValue === '美食之都') {
-            return true;
-        }
+    if (baseUtils.isPathEndsWith(filePath, "src/components/HelloWorld.vue")) {
+      if (keyName === "prop" && valueValue === "美食之都") {
+        return true;
+      }
     }
   },
   translateLanguage: "en",

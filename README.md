@@ -13,6 +13,7 @@
 7. 不出处理Object key 的i18n转换
 8. 中文翻译成英文（翻译仅用于学习研究）
 9. 处理 vue 的文件 template,改用 prettier.format(2.8.8)
+10. loader 模式下，排除： exclude 中的文件、localePath 中的文件、包含 node_modules 的文件
 
 ### 最终选择 prettier 来处理 vue template 模板中的内容   
 （试了很多正则表达式识别标签、属性、标签之间的文本，但在实际的项目中还是有意外的问题）

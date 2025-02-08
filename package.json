@@ -1,6 +1,6 @@
 {
   "name": "xxmi-autoi18n-tool",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "main": "./loaders/index.js",
   "license": "MIT",
   "bin": {
@@ -52,6 +52,7 @@
     "htmlparser2": "^10.0.0",
     "inquirer": "^8.1.1",
     "loadsh": "^0.0.4",
+    "micromatch": "^4.0.8",
     "p-limit": "3.1.0",
     "parse5": "^7.2.1",
     "parse5-htmlparser2-tree-adapter": "^7.1.0",
