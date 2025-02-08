@@ -105,7 +105,13 @@ function handleAttr({
   // 返回 true 表示不处理该属性
   const result =
     options.vueAstNodeAttr &&
-    options.vueAstNodeAttr({ node, attrNode, file, filePath: file.filePath });
+    options.vueAstNodeAttr({
+      node,
+      attrNode,
+      file,
+      filePath: file.filePath,
+      baseUtils,
+    });
   if (result) return;
 
   // 非 v-、@、: 开头的普通属性，要转为 : 模式，value 加上 ""（双引号）,
@@ -185,20 +191,21 @@ const handlerText = ({ code, options, ext, codeType, messages }) => {
 const matchTagContent = ({ code, options, ext, codeType, messages, file }) => {
   const vueAst = (ast) => {
     return (
-      options.vueAst && options.vueAst({ ast, file, filePath: file.filePath })
+      options.vueAst &&
+      options.vueAst({ ast, file, filePath: file.filePath, baseUtils })
     );
   };
   const vueAstNode = (node) => {
     return (
       options.vueAstNode &&
-      options.vueAstNode({ node, file, filePath: file.filePath })
+      options.vueAstNode({ node, file, filePath: file.filePath, baseUtils })
     );
   };
 
   const vueAstNodeText = (node) => {
     return (
       options.vueAstNodeText &&
-      options.vueAstNodeText({ node, file, filePath: file.filePath })
+      options.vueAstNodeText({ node, file, filePath: file.filePath, baseUtils })
     );
   };
 

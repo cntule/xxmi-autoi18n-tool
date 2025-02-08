@@ -70,14 +70,18 @@ module.exports = {
    * @param path ast 处理节点路径
    * @param node 当前节点
    * @param file 文件对象
-   * @param filePath 文件路径
+   * @param filePath 当前文件路径
+   * @param baseUtils 基础工具类
    * @return {boolean} true 跳过该节点及子节点的处理
    */
-  astEnter({ path, node, file, filePath }) {
-    // if (filePath.includes('src/components/HelloWorld.vue')) {
-    //     if (node.type === 'ClassProperty' && node.key.name === 'ignoreConfigList') {
-    //         return true;
-    //     }
+  astEnter({ path, node, file, filePath, baseUtils }) {
+    // if (baseUtils.isPathEndsWith(filePath, "src/components/HelloWorld.vue")) {
+    //   if (
+    //       node.type === "ClassProperty" &&
+    //       node.key.name === "ignoreConfigList"
+    //   ) {
+    //     return true;
+    //   }
     // }
   },
   /**
@@ -89,7 +93,8 @@ module.exports = {
    * @param keyName 属性key值
    * @param valueValue 属性值值
    * @param file 文件对象
-   * @param filePath 文件路径
+   * @param filePath 当前文件路径
+   * @param baseUtils 基础工具类
    * @return {boolean} true 跳过该节点及子节点的处理
    */
   astObjectProperty: ({
@@ -101,17 +106,53 @@ module.exports = {
     valueValue,
     file,
     filePath,
+    baseUtils,
   }) => {
-    // if (filePath.includes('src/components/HelloWorld.vue')) {
-    //     if (keyName === 'prop' && valueValue === '菜单编码') {
-    //         return true;
-    //     }
+    // if (baseUtils.isPathEndsWith(filePath,'src/components/HelloWorld.vue')) {
+    //   if (keyName === 'prop' && valueValue === '美食之都') {
+    //     return true;
+    //   }
     // }
   },
-  vueAst: ({ast, file, filePath}) => {},
-  vueAstNode: ({ node, file, filePath }) => {},
-  vueAstNodeAttr: ({ node,attrNode, file, filePath }) => {},
-  vueAstNodeText: ({ node, file, filePath }) => {},
+  /**
+   * 处理vue template时 prettier.format handleAst 会调用此函数
+   * 1. 如果不想内部处理 ast,返回 true ,使用者拿到 ast 自行处理
+   * @param ast vue template
+   * @param file 当前文件信息
+   * @param filePath 当前文件路径
+   * @param baseUtils 工具类
+   * @return {boolean} true 跳过该 ast 的处理
+   */
+  vueAst: ({ ast, file, filePath, baseUtils }) => {},
+  /**
+   * 遍历每一个节点
+   * 1. 如果不想内部处理这个基点的 attrs ，返回true，使用者拿到 node 自行处理
+   * @param node ast节点
+   * @param file 当前文件信息
+   * @param filePath 当前文件路径
+   * @param baseUtils 工具类
+   * @return {boolean} true 不处理节点的attrs
+   */
+  vueAstNode: ({ node, file, filePath, baseUtils }) => {},
+  /**
+   * 遍历element节点的每一个attr节点
+   * @param node element 节点
+   * @param attrNode 属性节点
+   * @param file 当前文件信息
+   * @param filePath 当前文件路径
+   * @param baseUtils 工具类
+   * @return {boolean} true 不处理attr节点
+   */
+  vueAstNodeAttr: ({ node, attrNode, file, filePath, baseUtils }) => {},
+  /**
+   * 遍历每一个 text 节点
+   * @param node text 节点
+   * @param file 当前文件信息
+   * @param filePath 当前文件路径
+   * @param baseUtils 工具类
+   * @return {boolean} true 不处理 text 节点内容
+   */
+  vueAstNodeText: ({ node, file, filePath, baseUtils }) => {},
   translateLanguage: "en", // 翻译语言文件 en.json 里面内容
   translateLimit: 20, // 翻译数量并发限制
   translateOrderWords: 2, // 取词顺序
