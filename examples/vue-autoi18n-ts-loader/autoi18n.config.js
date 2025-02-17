@@ -16,7 +16,9 @@ module.exports = {
   ignoreTagAttr: ["class", "style", "src", "href", "width", "height"],
   i18nObjectMethod: "i18n.t",
   i18nMethod: "$t",
-  setMessageKey: false,
+  setMessageKey: ({key})=>{
+    return `pre.${key}`;
+  },
   i18nInstance: "import i18n from '@/i18n';",
   prettier: {
     singleQuote: true,

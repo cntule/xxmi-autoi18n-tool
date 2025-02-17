@@ -5,6 +5,7 @@
   "scripts": {
     "tsserve": "vue-cli-service serve",
     "build": "vue-cli-service build",
+    "i18n:init": "autoi18n init",
     "s": "autoi18n sync",
     "r": "autoi18n sync -r",
     "f": "autoi18n restore -f ./src/locales/zh.json",
